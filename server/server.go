@@ -43,13 +43,8 @@ func (s *Server) BroadCast(user *User, msg string) {
 
 func (s *Server) connHandler(conn net.Conn) {
 	//add user to online user list
-	user := NewUser(conn)
-	s.lock.Lock()
-	s.OnlineUsers[user.Name] = user
-	s.lock.Unlock()
-
-	//broadcast user online
-	s.BroadCast(user, "online")
+	user := NewUser(conn, s)
+	user.Online()
 
 	//receive user's message then broadcast
 	go func() {
@@ -57,7 +52,7 @@ func (s *Server) connHandler(conn net.Conn) {
 		for {
 			n, err := conn.Read(buff)
 			if n == 0 {
-				s.BroadCast(user, "offline")
+				user.Offline()
 				return
 			}
 			if err != nil {
@@ -65,7 +60,7 @@ func (s *Server) connHandler(conn net.Conn) {
 				return
 			}
 			msg := string(buff[:n])
-			s.BroadCast(user, msg)
+			user.SentMsgToAll(msg)
 		}
 	}()
 	select {}
