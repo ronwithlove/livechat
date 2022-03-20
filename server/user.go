@@ -55,3 +55,7 @@ func (u *User) Offline() {
 func (u *User) SentMsgToAll(msg string) {
 	u.server.BroadCast(u, msg)
 }
+
+func (u *User) sentMsgToSelf(msg string) {
+	u.conn.Write([]byte(msg))
+}
