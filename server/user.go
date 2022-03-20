@@ -59,3 +59,7 @@ func (u *User) SentMsgToAll(msg string) {
 func (u *User) sentMsgToSelf(msg string) {
 	u.conn.Write([]byte(msg))
 }
+
+func (u *User) SentMsgToOneClient(remoteUser *User, msg string) {
+	remoteUser.sentMsgToSelf(msg)
+}
