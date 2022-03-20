@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -46,6 +47,8 @@ func (s *Server) connHandler(conn net.Conn) {
 	user := NewUser(conn, s)
 	user.Online()
 
+	isLive := make(chan bool)
+
 	//receive user's message then broadcast
 	go func() {
 		buff := make([]byte, 4096)
@@ -61,9 +64,21 @@ func (s *Server) connHandler(conn net.Conn) {
 			}
 			msg := string(buff[:n])
 			user.SentMsgToAll(msg)
+
+			isLive <- true
 		}
 	}()
-	select {}
+	for {
+		select {
+		case <-isLive: // do nothing, time.After will be reactive
+		//If sever hasn't received any messages from a client during this period of time, the client will be kicked off
+		case <-time.After(time.Second * 6):
+			user.sentMsgToSelf("Disconnect from server.")
+			close(user.MessageChan)
+			conn.Close()
+			return
+		}
+	}
 }
 
 func (s *Server) Start() {
