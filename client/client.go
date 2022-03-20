@@ -34,5 +34,13 @@ func main() {
 		return
 	}
 	fmt.Println("Successfully connected to the server")
-	select {}
+
+	var buff [512]byte
+	for {
+		_, err := client.conn.Read(buff[0:])
+		if err != nil {
+			return
+		}
+		fmt.Println(string(buff[0:]))
+	}
 }
