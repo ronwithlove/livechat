@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 type Client struct {
@@ -27,6 +28,15 @@ func NewClient(serverIP string, serverPort int) *Client {
 	return client
 }
 
+func (c *Client) SendToAllUsers(msg string) {
+	if len(msg) != 0 {
+		_, err := c.conn.Write([]byte(msg))
+		if err != nil {
+			fmt.Println("conn write err:", err)
+		}
+	}
+}
+
 func main() {
 	client := NewClient("127.0.0.1", 8888)
 	if client == nil {
@@ -35,6 +45,15 @@ func main() {
 	}
 	fmt.Println("Successfully connected to the server")
 
+	//test send msg to server
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			client.SendToAllUsers("I am from " + client.conn.RemoteAddr().String())
+		}
+	}()
+
+	//get msg from server
 	var buff [512]byte
 	for {
 		_, err := client.conn.Read(buff[0:])

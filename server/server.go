@@ -48,8 +48,26 @@ func (s *Server) connHandler(conn net.Conn) {
 	s.OnlineUsers[user.Name] = user
 	s.lock.Unlock()
 
+	//broadcast user online
 	s.BroadCast(user, "online")
 
+	//receive user's message then broadcast
+	go func() {
+		buff := make([]byte, 4096)
+		for {
+			n, err := conn.Read(buff)
+			if n == 0 {
+				s.BroadCast(user, "offline")
+				return
+			}
+			if err != nil {
+				fmt.Println("Conn Read err:", err)
+				return
+			}
+			msg := string(buff[:n])
+			s.BroadCast(user, msg)
+		}
+	}()
 	select {}
 }
 
